@@ -3,6 +3,7 @@ import configureStore from "redux-mock-store";
 import CommissionForm from "./CommissionForm";
 
 import { machineActions } from "@/app/store/machine";
+import type { MachineEventErrors } from "@/app/store/machine/types";
 import type { RootState } from "@/app/store/root/types";
 import { ScriptName, ScriptType } from "@/app/store/script/types";
 import { PowerState } from "@/app/store/types/enum";
@@ -268,5 +269,100 @@ describe("CommissionForm", () => {
         name: /configure the power type/i,
       })
     ).toBeInTheDocument();
+  });
+
+  describe("error key mapping", () => {
+    it("displays non-field errors from __all__ key", () => {
+      const store = mockStore(state);
+      const errors = {
+        __all__: ["General form error"],
+      } as unknown as MachineEventErrors;
+
+      renderWithBrowserRouter(
+        <CommissionForm
+          clearSidePanelContent={vi.fn()}
+          errors={errors}
+          machines={[state.machine.items[0]]}
+          processingCount={0}
+          viewingDetails={false}
+        />,
+        { route: "/machines", store }
+      );
+
+      expect(screen.getByText("General form error")).toBeInTheDocument();
+    });
+
+    it("handles null errors gracefully", () => {
+      const store = mockStore(state);
+
+      expect(() => {
+        renderWithBrowserRouter(
+          <CommissionForm
+            clearSidePanelContent={vi.fn()}
+            errors={null}
+            machines={[state.machine.items[0]]}
+            processingCount={0}
+            viewingDetails={false}
+          />,
+          { route: "/machines", store }
+        );
+      }).not.toThrow();
+    });
+
+    it("handles undefined errors gracefully", () => {
+      const store = mockStore(state);
+
+      expect(() => {
+        renderWithBrowserRouter(
+          <CommissionForm
+            clearSidePanelContent={vi.fn()}
+            errors={undefined}
+            machines={[state.machine.items[0]]}
+            processingCount={0}
+            viewingDetails={false}
+          />,
+          { route: "/machines", store }
+        );
+      }).not.toThrow();
+    });
+
+    it("handles string errors without transformation", () => {
+      const store = mockStore(state);
+      const errors = "A general error occurred" as unknown as MachineEventErrors;
+
+      renderWithBrowserRouter(
+        <CommissionForm
+          clearSidePanelContent={vi.fn()}
+          errors={errors}
+          machines={[state.machine.items[0]]}
+          processingCount={0}
+          viewingDetails={false}
+        />,
+        { route: "/machines", store }
+      );
+
+      expect(screen.getByText("A general error occurred")).toBeInTheDocument();
+    });
+
+    it("displays non-field errors for unmapped keys", () => {
+      const store = mockStore(state);
+      // Keys that don't match any form field should appear as notifications
+      const errors = {
+        unknown_field: "Unknown field error",
+      } as unknown as MachineEventErrors;
+
+      renderWithBrowserRouter(
+        <CommissionForm
+          clearSidePanelContent={vi.fn()}
+          errors={errors}
+          machines={[state.machine.items[0]]}
+          processingCount={0}
+          viewingDetails={false}
+        />,
+        { route: "/machines", store }
+      );
+
+      expect(screen.getByText("Unknown field error")).toBeInTheDocument();
+    });
   });
 });

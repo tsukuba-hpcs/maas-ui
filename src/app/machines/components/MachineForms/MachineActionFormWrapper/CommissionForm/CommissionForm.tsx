@@ -1,4 +1,5 @@
 import { Notification } from "@canonical/react-components";
+import { useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router";
 import * as Yup from "yup";
@@ -54,6 +55,17 @@ const CommissionFormSchema = Yup.object().shape({
 
 type ScriptInput = Record<string, { url: string }>;
 
+// Map backend snake_case error keys to frontend camelCase field names
+const ERROR_KEY_MAPPING: Record<string, keyof CommissionFormValues> = {
+  enable_ssh: "enableSSH",
+  commissioning_scripts: "commissioningScripts",
+  testing_scripts: "testingScripts",
+  script_input: "scriptInputs",
+  skip_bmc_config: "skipBMCConfig",
+  skip_networking: "skipNetworking",
+  skip_storage: "skipStorage",
+};
+
 type Props = MachineActionFormProps;
 
 export const CommissionForm = ({
@@ -67,6 +79,21 @@ export const CommissionForm = ({
   selectedMachines,
 }: Props): React.ReactElement => {
   const id = useGetURLId(MachineMeta.PK);
+
+  // Map snake_case error keys from backend to camelCase field names
+  const mappedErrors = useMemo(() => {
+    if (!errors || typeof errors !== "object" || Array.isArray(errors)) {
+      return errors;
+    }
+    const newErrors: Record<string, unknown> = { ...errors };
+    Object.entries(ERROR_KEY_MAPPING).forEach(([snakeKey, camelKey]) => {
+      if (snakeKey in newErrors) {
+        newErrors[camelKey] = newErrors[snakeKey];
+        delete newErrors[snakeKey];
+      }
+    });
+    return newErrors as typeof errors;
+  }, [errors]);
   const { machine } = useFetchMachine(id);
   const dispatch = useDispatch();
   const { dispatch: dispatchForSelectedMachines, ...actionProps } =
@@ -110,7 +137,7 @@ export const CommissionForm = ({
       actionName={NodeActions.COMMISSION}
       allowUnchanged
       cleanup={machineActions.cleanup}
-      errors={errors}
+      errors={mappedErrors}
       initialValues={{
         enableSSH: false,
         skipBMCConfig: false,
