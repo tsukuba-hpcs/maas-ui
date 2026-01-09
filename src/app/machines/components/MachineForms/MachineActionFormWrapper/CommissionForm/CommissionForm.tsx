@@ -1,5 +1,6 @@
-import { Notification } from "@canonical/react-components";
 import { useMemo } from "react";
+
+import { Notification } from "@canonical/react-components";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router";
 import * as Yup from "yup";

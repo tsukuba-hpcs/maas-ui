@@ -213,7 +213,7 @@ export function* handleWebsocketEvent(
       }
 
       case "open": {
-        yield* put({ type: "status/websocketConnect" });
+        yield* put({ type: "status/websocketConnected" });
         resetLoaded();
         break;
       }

@@ -561,7 +561,7 @@ describe("websocket sagas", () => {
     const saga = handleWebsocketEvent(socketChannel, socketClient);
     expect(saga.next().value).toEqual(take(socketChannel));
     expect(saga.next({ type: "open" }).value).toEqual(
-      put({ type: "status/websocketConnect" })
+      put({ type: "status/websocketConnected" })
     );
   });
 
